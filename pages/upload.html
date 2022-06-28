@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width'>
+    <title>axios - file upload example</title>
+  </head>
+  <body>
+    <h1>upload file</h1>
+    <form onsubmit="return false;">
+      <div>
+        <label for="file">File</label>
+        <input id="file" type="file"/>
+      </div>
+      <button id="upload" type="button">Upload</button>
+    </form>
+    <span>progress:</span>
+    <div id="progress-num"></div>
+    <span>rst:</span>
+    <div id="rst"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      document.getElementById('upload').onclick = function () {
+        // 1. prepare data
+        var data = new FormData();
+        data.append('foo', 'bar');
+        data.append('file', document.getElementById('file').files[0]);
+        
+        // 2. write onUploadProgress listener
+        var config = {
+          onUploadProgress: function(progressEvent) {
+            const totalLength = progressEvent.lengthComputable ? progressEvent.total :
+        					progressEvent.target.getResponseHeader('content-length') ||
+              				progressEvent.target.getResponseHeader('x-decompressed-content-length');
+            console.log("onUploadProgress", totalLength);
+            if (totalLength !== null) {
+                updateProgress(Math.round( (progressEvent.loaded * 100) / totalLength ));
+            }
+          }
+        };
+        
+        // 3. make request
+        axios.post('/upload', data, config)
+          .then(function (res) {
+            setRst(res.data);
+            console.log(res);
+          })
+          .catch(function (err) {
+            setRst(err.message);
+          });
+      };
+      function updateProgress(progress) {
+        document.getElementById('progress-num').innerText = progress + '%';
+      }
+
+      function setRst(message) {
+        document.getElementById('rst').innerText = message;
+      }
+    </script>
+  </body>
+</html>
