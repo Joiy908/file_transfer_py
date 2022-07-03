@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, send_from_directory, abort, Response, request
 
+
 app = Flask(__name__)
 
 ROOT_PATH = './files'
@@ -11,20 +12,31 @@ app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
 @app.route('/')
 def index():
-    # get file list or ROOT_PATH
-    file_list = ['<li>'+f+'</li>' for f in os.listdir(ROOT_PATH) if os.path.isfile(os.path.join(ROOT_PATH, f))]
-    page_content = f"Current dir: {ROOT_PATH} </br>" \
-                   "Files can be downloaded: </br>" \
-                   f"<ul>{''.join(file_list)}</ul>" \
-                   r"<div>How to download file: current_url/download/&#60;file_name></div>" \
-                   "<div><a href='/upload'>upload file</a></div>"
-    return page_content
+    return read_file('pages/index.html')
 
 
-@app.route('/download/<filename>')
-def download(filename):
-    if os.path.isfile(os.path.join(ROOT_PATH, filename)):
-        return send_from_directory(ROOT_PATH, filename, as_attachment=True)
+@app.route('/path', methods=['POST'])
+def getPathTree():
+    # os.walk 遍历path中文件和文件夹
+    path_name = request.get_json().get('dirPath')
+    if not os.path.exists(path_name):
+        path_name = ROOT_PATH
+    (currentDirName, subFolderList, subFileList) = list(os.walk(path_name))[0]
+    pathTree = {'currentDirName': currentDirName,
+                'subFolderList': subFolderList,
+                'subFileList': subFileList}
+    return pathTree
+
+
+@app.route('/download/<file_path>')
+def download(file_path):
+    # decode path
+    file_path = decode_path(file_path)
+
+    if os.path.isfile(file_path):
+        # get file_path_without_root
+        file_path_without_root = file_path.replace(ROOT_PATH + '/', '')
+        return send_from_directory(ROOT_PATH, file_path_without_root, as_attachment=True)
     else:
         abort(Response("File does not exists, please check the file name."))
 
@@ -52,6 +64,11 @@ def read_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
     return content
+
+
+def decode_path(file_path):
+    """rule: replace '-p*a*t*h-' with '/' """
+    return file_path.replace('-p*a*t*h-', '/')
 
 
 def is_allowed_file(filename):

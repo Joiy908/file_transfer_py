@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <title>File Transfer</title>
+  <style>
+    table {
+      border: 1;
+      border-collapse: collapse;
+      margin-right: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>File to download</h1>
+    Current dir：{{pathTreeObj.currentDirName}}
+    <button @click="backToParentDir()">back to parent dir</button><br>
+
+    <table>
+        <tr>
+            <th>Type</th><th>Name</th><th>Opration</th>
+        </tr>
+        <template v-show="pathTreeObj.subFolderList">
+          <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="idx">
+              <td>Dir</td>
+              <td>{{ dirName }}</td>
+              <td @click="openDir(dirName)"><button>open</button></td>
+          </tr>
+        </template>
+        <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="idx">
+          <td>File</td>
+          <td>{{ fileName }}</td>
+          <td><a :href="getDownloadUrl(fileName)"><button>download</button></a></td>
+        </tr>
+        
+    </table>
+</div>
+<script>
+  new Vue({
+        el: '#app',  // css selector
+        data: {
+            pathTreeObj:{
+                currentDirName: '',
+                subFileList: [],
+                subFolderList: []
+            },
+            ROOT_PATH: './files'
+        },
+        methods: {
+          getPathTreeObj(path) {
+              data = {'dirPath':path};
+              axios.post('path', data).then(
+                  response =>{
+                      console.log('request successfully',response.data);
+                      this.pathTreeObj = response.data;
+                  },
+                  error => {
+                      console.log('err',error.message);
+                  }
+              );
+          },
+          backToParentDir() {
+            if (this.pathTreeObj.currentDirName === this.ROOT_PATH) {
+              return;
+            }
+            // get parent dir path
+            const pathArray = this.pathTreeObj.currentDirName.split("/");
+            pathArray.pop();
+            parentPath = pathArray.join('/')
+            // jump to
+            this.getPathTreeObj(parentPath);
+          },
+          openDir(dirName) {
+            path = this.pathTreeObj.currentDirName + '/' + dirName;
+            this.getPathTreeObj(path);
+          },
+          // here 
+          getDownloadUrl(fileName) {
+            const pathArray = this.pathTreeObj.currentDirName.split("/");
+            pathArray.push(fileName);
+            return 'download/' + pathArray.join('-p*a*t*h-');
+          }
+        },
+        mounted() {
+            this.getPathTreeObj(this.ROOT_PATH);
+        }
+    });
+</script>
+</body>
+</html>
