@@ -51,11 +51,15 @@ def upload_file():
             # flash('No file part')
             return 'No file part'
         f = request.files.get('file')
-        if is_allowed_file(f.filename):
-            f.save(os.path.join(ROOT_PATH, f.filename))  # 保存文件
-            return "upload successfully!"
-        else:
+        dir_path = request.form.get('dirPath')
+        if not is_allowed_file(f.filename):
             return f"upload fails, file type of {f.filename} is not permitted."
+        if not os.path.exists(dir_path):
+            return f"upload fails, {dir_path} don't exist."
+        f.save(os.path.join(dir_path, f.filename))  # 保存文件
+        return "upload successfully!"
+
+
 
 
 def read_file(file_path):

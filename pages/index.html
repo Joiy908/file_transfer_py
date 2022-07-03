@@ -106,6 +106,7 @@
             }
             const data = new FormData();
             data.append('file', fileToUpload);
+            data.append('dirPath', this.pathTreeObj.currentDirName);
             
             // 2. write onUploadProgress listener
             const config = {
