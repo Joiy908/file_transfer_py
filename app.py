@@ -2,7 +2,6 @@ import os
 
 from flask import Flask, send_from_directory, abort, Response, request
 
-
 app = Flask(__name__)
 
 ROOT_PATH = './files'
@@ -58,8 +57,6 @@ def upload_file():
             return f"upload fails, {dir_path} don't exist."
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
         return "upload successfully!"
-
-
 
 
 def read_file(file_path):
