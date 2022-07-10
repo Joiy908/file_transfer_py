@@ -92,12 +92,11 @@
             this.getPathTreeObj(path);
           },
           getDownloadUrl(fileName) {
-            const pathArray = this.pathTreeObj.currentDirName.split("/");
-            pathArray.push(fileName);
-            return 'download/' + pathArray.join('-p*a*t*h-');
+            let filePath = this.pathTreeObj.currentDirName +'/' + fileName;
+            
+            return 'download?filePath=' + filePath;
           },
           upload() {
-            
             // 1. prepare data
             fileToUpload = document.getElementById('file').files[0];
             if (fileToUpload === undefined) {

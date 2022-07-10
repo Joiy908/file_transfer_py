@@ -27,11 +27,9 @@ def getPathTree():
     return pathTree
 
 
-@app.route('/download/<file_path>')
-def download(file_path):
-    # decode path
-    file_path = decode_path(file_path)
-
+@app.route('/download')
+def download():
+    file_path = request.args.get("filePath")
     if os.path.isfile(file_path):
         # get file_path_without_root
         file_path_without_root = file_path.replace(ROOT_PATH + '/', '')
