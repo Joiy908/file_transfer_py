@@ -7,145 +7,164 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <title>File Transfer</title>
   <style>
-    table {
-      border: 1;
-      border-collapse: collapse;
-      margin-right: 50px;
-    }
+      table {
+          border: 1;
+          border-collapse: collapse;
+          margin-right: 50px;
+      }
   </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Prat I: download file -->
-    <h1>File to download</h1>
-    Current dir：{{pathTreeObj.currentDirName}}
-    <button @click="backToParentDir()">back to parent dir</button><br>
-    <table>
-        <tr>
-            <th>Type</th><th>Name</th><th>Opration</th>
-        </tr>
-        <template v-show="pathTreeObj.subFolderList">
-          <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="idx">
-              <td>Dir</td>
-              <td>{{ dirName }}</td>
-              <td @click="openDir(dirName)"><button>open</button></td>
-          </tr>
-        </template>
-        <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="idx">
-          <td>File</td>
-          <td>{{ fileName }}</td>
-          <td><a :href="getDownloadUrl(fileName)"><button>download</button></a></td>
-        </tr>
-    </table>
-    <!-- Prat II: upload file -->
-    <h1>Upload File</h1>
-    <input id="file" type="file"/></br>
-    <button type="button" @click="upload()">Upload</button></br>
-    <div v-if="uploadStatus.isUploading">
-      Progress:{{ uploadStatus.uploadProgress }}%</br>
-      Result: {{ uploadStatus.result }}
-    </div>
+<div id="app">
+  <!-- Prat I: download file -->
+  <h1>File to download</h1>
+  Current dir：{{pathTreeObj.currentDirName}}
+  <button @click="backToParentDir()">back to parent dir</button>
+  <br>
+  <table>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Opration</th>
+    </tr>
+    <template v-show="pathTreeObj.subFolderList">
+      <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="idx">
+        <td>Dir</td>
+        <td>{{ dirName }}</td>
+        <td @click="openDir(dirName)">
+          <button>open</button>
+        </td>
+      </tr>
+    </template>
+    <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="idx">
+      <td>File</td>
+      <td>{{ fileName }}</td>
+      <td><a :href="getDownloadUrl(fileName)">
+        <button>download</button>
+      </a></td>
+    </tr>
+  </table>
 
+</div>
+<div id="upload">
+  <!-- Prat II: upload file -->
+  <h1>Upload File</h1>
+  <input id="file" type="file"/></br>
+  <button type="button" @click="upload()">Upload</button>
+  </br>
+  <div v-if="uploadStatus.isUploading">
+    Progress:{{ uploadStatus.uploadProgress }}%</br>
+    Result: {{ uploadStatus.result }}
+  </div>
 </div>
 <script>
   const vm = new Vue({
-        el: '#app',  // css selector
-        data: {
-            pathTreeObj:{
-                currentDirName: '',
-                subFileList: [],
-                subFolderList: []
-            },
-            ROOT_PATH: './files',
-            uploadStatus: {
-              isUploading: false,
-              uploadProgress: 0,
-              result: ''
-            }
-        },
-        methods: {
-          getPathTreeObj(path) {
-              data = {'dirPath':path};
-              axios.post('path', data).then(
-                  response =>{
-                      console.log('request successfully',response.data);
-                      this.pathTreeObj = response.data;
-                  },
-                  error => {
-                      console.log('err',error.message);
-                  }
-              );
+    el: '#app',  // css selector
+    data: {
+      pathTreeObj: {
+        currentDirName: '',
+        subFileList: [],
+        subFolderList: []
+      },
+      ROOT_PATH: './files',
+    },
+    methods: {
+      getPathTreeObj(path) {
+        data = {'dirPath': path};
+        axios.post('path', data).then(
+          response => {
+            console.log('request successfully', response.data);
+            this.pathTreeObj = response.data;
           },
-          backToParentDir() {
-            if (this.pathTreeObj.currentDirName === this.ROOT_PATH) {
-              return;
-            }
-            // get parent dir path
-            const pathArray = this.pathTreeObj.currentDirName.split("/");
-            pathArray.pop();
-            parentPath = pathArray.join('/')
-            // jump to
-            this.getPathTreeObj(parentPath);
-          },
-          openDir(dirName) {
-            path = this.pathTreeObj.currentDirName + '/' + dirName;
-            this.getPathTreeObj(path);
-          },
-          getDownloadUrl(fileName) {
-            let filePath = this.pathTreeObj.currentDirName +'/' + fileName;
-            
-            return 'download?filePath=' + filePath;
-          },
-          upload() {
-            // 1. prepare data
-            fileToUpload = document.getElementById('file').files[0];
-            if (fileToUpload === undefined) {
-              alert('please select file to upload.')
-              return;
-            }
-            const data = new FormData();
-            data.append('file', fileToUpload);
-            data.append('dirPath', this.pathTreeObj.currentDirName);
-            
-            // 2. write onUploadProgress listener
-            const config = {
-              onUploadProgress: function(progressEvent) {
-                const totalLength = progressEvent.lengthComputable ? progressEvent.total :
-                                    progressEvent.target.getResponseHeader('content-length') ||
-                                    progressEvent.target.getResponseHeader('x-decompressed-content-length');
-                // console.log("onUploadProgress", totalLength);
-                if (totalLength !== null) {
-                    vm.updateProgress(Math.round( (progressEvent.loaded * 100) / totalLength ));
-                }
-              }
-            };
-        
-            // 3. make request
-            axios.post('/upload', data, config)
-              .then(function (res) {
-                // alert(rst);
-                vm.uploadStatus.result = res.data;
-                console.log(res);
-                vm.getPathTreeObj(vm.pathTreeObj.currentDirName);
-                // vm.uploadStatus.isUploading = false;
-              })
-              .catch(function (err) {
-                // alert(err);
-                vm.uploadStatus.result = err.data;
-                console.log(err);
-                // vm.uploadStatus.isUploading = false;
-              });
-          },
-          updateProgress(progress) {
-            this.uploadStatus.isUploading = true;
-            this.uploadStatus.uploadProgress = progress;
+          error => {
+            console.log('err', error.message);
           }
-          
-        },
-        mounted() {
-            this.getPathTreeObj(this.ROOT_PATH);
+        );
+      },
+      backToParentDir() {
+        if (this.pathTreeObj.currentDirName === this.ROOT_PATH) {
+          return;
         }
-    });
+        // get parent dir path
+        const pathArray = this.pathTreeObj.currentDirName.split("/");
+        pathArray.pop();
+        parentPath = pathArray.join('/')
+        // jump to
+        this.getPathTreeObj(parentPath);
+      },
+      openDir(dirName) {
+        path = this.pathTreeObj.currentDirName + '/' + dirName;
+        this.getPathTreeObj(path);
+      },
+      getDownloadUrl(fileName) {
+        let filePath = this.pathTreeObj.currentDirName + '/' + fileName;
+
+        return 'download?filePath=' + filePath;
+      },
+
+
+    },
+    mounted() {
+      this.getPathTreeObj(this.ROOT_PATH);
+    }
+  });
+
+  const uploadVm = new Vue({
+    el: '#upload',  // css selector
+    data: {
+      uploadStatus: {
+        isUploading: false,
+        uploadProgress: 0,
+        result: ''
+      }
+    },
+    methods: {
+      upload() {
+        // 1. prepare data
+        fileToUpload = document.getElementById('file').files[0];
+        if (fileToUpload === undefined) {
+          alert('please select file to upload.')
+          return;
+        }
+        const data = new FormData();
+        data.append('file', fileToUpload);
+        data.append('dirPath', vm.pathTreeObj.currentDirName);
+
+        // 2. write onUploadProgress listener
+        const config = {
+          onUploadProgress: function (progressEvent) {
+            const totalLength = progressEvent.lengthComputable ? progressEvent.total :
+              progressEvent.target.getResponseHeader('content-length') ||
+              progressEvent.target.getResponseHeader('x-decompressed-content-length');
+            // console.log("onUploadProgress", totalLength);
+            if (totalLength !== null) {
+              uploadVm.updateProgress(Math.round((progressEvent.loaded * 100) / totalLength));
+            }
+          }
+        };
+
+        // 3. make request
+        axios.post('/upload', data, config)
+          .then(function (res) {
+            // alert(rst);
+            uploadVm.uploadStatus.result = res.data;
+            console.log(res);
+            vm.getPathTreeObj(vm.pathTreeObj.currentDirName);
+            // vm.uploadStatus.isUploading = false;
+          })
+          .catch(function (err) {
+            // alert(err);
+            uploadVm.uploadStatus.result = err.data;
+            console.log(err);
+            // vm.uploadStatus.isUploading = false;
+          });
+      },
+      updateProgress(progress) {
+        this.uploadStatus.isUploading = true;
+        this.uploadStatus.uploadProgress = progress;
+      }
+    }
+  })
 </script>
 </body>
 </html>

@@ -29,20 +29,20 @@ def getPathTree():
 
 @app.route('/download')
 def download():
-    file_path = request.args.get("filePath")
+    file_path = request.args.get('filePath')
     if os.path.isfile(file_path):
         # get file_path_without_root
         file_path_without_root = file_path.replace(ROOT_PATH + '/', '')
         return send_from_directory(ROOT_PATH, file_path_without_root, as_attachment=True)
     else:
-        abort(Response("File does not exists, please check the file name."))
+        abort(Response('File does not exists, please check the file name.'))
 
 
 # upload page
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'GET':
-        return read_file("./pages/upload.html")
+        return read_file('./pages/upload.html')
     else:
         if 'file' not in request.files:
             # flash('No file part')
@@ -50,16 +50,16 @@ def upload_file():
         f = request.files.get('file')
         dir_path = request.form.get('dirPath')
         if not is_allowed_file(f.filename):
-            return f"upload fails, file type of {f.filename} is not permitted."
+            return f'upload fails, file type of {f.filename} is not permitted.'
         if not os.path.exists(dir_path):
-            return f"upload fails, {dir_path} don't exist."
+            return f"upload fails, {dir_path} don't exist.'"
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
-        return "upload successfully!"
+        return 'upload successfully!'
 
 
 def read_file(file_path):
     if not os.path.exists(file_path):
-        raise Exception("File does not exit.")
+        raise Exception('File does not exit.')
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
     return content
