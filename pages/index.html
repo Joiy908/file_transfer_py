@@ -28,7 +28,7 @@
       <th>Opration</th>
     </tr>
     <template v-show="pathTreeObj.subFolderList">
-      <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="idx">
+      <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="dirName">
         <td>Dir</td>
         <td>{{ dirName }}</td>
         <td @click="openDir(dirName)">
@@ -36,7 +36,7 @@
         </td>
       </tr>
     </template>
-    <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="idx">
+    <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="fileName">
       <td>File</td>
       <td>{{ fileName }}</td>
       <td><a :href="getDownloadUrl(fileName)">

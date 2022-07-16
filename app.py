@@ -5,7 +5,7 @@ from flask import Flask, send_from_directory, abort, Response, request
 app = Flask(__name__)
 
 ROOT_PATH = './files'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'zip'}
 app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
 
