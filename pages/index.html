@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <title>File Transfer</title>
   <style>
@@ -70,7 +70,7 @@
     },
     methods: {
       getPathTreeObj(path) {
-        data = {'dirPath': path};
+        let data = {'dirPath': path};
         axios.post('path', data).then(
           response => {
             console.log('request successfully', response.data);
@@ -88,12 +88,12 @@
         // get parent dir path
         const pathArray = this.pathTreeObj.currentDirName.split("/");
         pathArray.pop();
-        parentPath = pathArray.join('/')
+        let parentPath = pathArray.join('/')
         // jump to
         this.getPathTreeObj(parentPath);
       },
       openDir(dirName) {
-        path = this.pathTreeObj.currentDirName + '/' + dirName;
+        let path = this.pathTreeObj.currentDirName + '/' + dirName;
         this.getPathTreeObj(path);
       },
       getDownloadUrl(fileName) {
@@ -121,7 +121,7 @@
     methods: {
       upload() {
         // 1. prepare data
-        fileToUpload = document.getElementById('file').files[0];
+        let fileToUpload = document.getElementById('file').files[0];
         if (fileToUpload === undefined) {
           alert('please select file to upload.')
           return;
