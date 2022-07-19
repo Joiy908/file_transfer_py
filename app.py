@@ -48,7 +48,8 @@ def upload_file():
             # flash('No file part')
             return 'No file part'
         f = request.files.get('file')
-        dir_path = request.form.get('dirPath')
+        # get file path from URL param
+        dir_path = request.args.get('dirPath')
         if not is_allowed_file(f.filename):
             return f'upload fails, file type of {f.filename} is not permitted.'
         if not os.path.exists(dir_path):

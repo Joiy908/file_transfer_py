@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <title>File Transfer</title>
   <style>
@@ -18,7 +18,7 @@
 <div id="app">
   <!-- Prat I: download file -->
   <h1>File to download</h1>
-  Current dir：{{pathTreeObj.currentDirName}}
+  Current dir: {{pathTreeObj.currentDirName}}
   <button @click="backToParentDir()">back to parent dir</button>
   <br>
   <table>
@@ -102,7 +102,6 @@
         return 'download?filePath=' + filePath;
       },
 
-
     },
     mounted() {
       this.getPathTreeObj(this.ROOT_PATH);
@@ -118,6 +117,12 @@
         result: ''
       }
     },
+    computed: {
+      uploadUrl() {
+        // pass path as url parameter
+        return 'upload?dirPath=' + vm.pathTreeObj.currentDirName;
+      }
+    },
     methods: {
       upload() {
         // 1. prepare data
@@ -128,12 +133,12 @@
         }
         const data = new FormData();
         data.append('file', fileToUpload);
-        data.append('dirPath', vm.pathTreeObj.currentDirName);
+        // data.append('dirPath', vm.pathTreeObj.currentDirName);
 
         // 2. write onUploadProgress listener
         const config = {
           onUploadProgress: function (progressEvent) {
-            const totalLength = progressEvent.lengthComputable ? progressEvent.total :
+            let totalLength = progressEvent.lengthComputable ? progressEvent.total :
               progressEvent.target.getResponseHeader('content-length') ||
               progressEvent.target.getResponseHeader('x-decompressed-content-length');
             // console.log("onUploadProgress", totalLength);
@@ -144,9 +149,10 @@
         };
 
         // 3. make request
-        axios.post('/upload', data, config)
+        axios.post(this.uploadUrl, data, config)
           .then(function (res) {
             // alert(rst);
+            uploadVm.uploadStatus.isUploading = true;
             uploadVm.uploadStatus.result = res.data;
             console.log(res);
             vm.getPathTreeObj(vm.pathTreeObj.currentDirName);
