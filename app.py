@@ -18,7 +18,6 @@ def index():
 
 @app.route('/path', methods=['POST'])
 def getPathTree():
-    # os.walk 遍历path中文件和文件夹
     path_name = request.get_json().get('dirPath')
     if not os.path.exists(path_name):
         path_name = ROOT_PATH
