@@ -8,6 +8,8 @@ ROOT_PATH = './files'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'zip'}
 app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
+messages = ['demo message']
+
 
 @app.route('/')
 def index():
@@ -56,6 +58,16 @@ def upload_file():
             return f"upload fails, {dir_path} don't exist.'"
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
         return 'upload successfully!'
+
+
+@app.route('/messages', methods=['GET', 'POST'])
+def getMsgs():
+    if request.method == 'POST':
+        msg = request.get_json().get('msg')
+        messages.append(msg)
+        return "upload msg successfully."
+    else:
+        return {'messages': messages}
 
 
 def read_file(file_path):

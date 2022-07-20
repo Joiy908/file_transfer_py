@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+  <!-- vue.dev -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <!-- vue.min -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script> -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <title>File Transfer</title>
   <style>
@@ -15,6 +18,7 @@
   </style>
 </head>
 <body>
+
 <div id="app">
   <!-- Prat I: download file -->
   <h1>File to download</h1>
@@ -25,7 +29,7 @@
     <tr>
       <th>Type</th>
       <th>Name</th>
-      <th>Opration</th>
+      <th>Operation</th>
     </tr>
     <template v-show="pathTreeObj.subFolderList">
       <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="dirName">
@@ -44,18 +48,28 @@
       </a></td>
     </tr>
   </table>
-
 </div>
 <div id="upload">
   <!-- Prat II: upload file -->
   <h1>Upload File</h1>
-  <input id="file" type="file"/></br>
+  <input id="file" type="file"/><br/>
   <button type="button" @click="upload()">Upload</button>
-  </br>
+  <br/>
   <div v-if="uploadStatus.isUploading">
-    Progress:{{ uploadStatus.uploadProgress }}%</br>
+    Progress:{{ uploadStatus.uploadProgress }}%<br/>
     Result: {{ uploadStatus.result }}
   </div>
+</div>
+
+<div id="msgBox">
+  <h1>Message Box</h1>
+  <span>message:</span><button @click="getMsgs()">refresh</button>
+  <ul>
+    <li v-for="msg in messages" :key="msg">{{msg}}</li>
+  </ul>
+  <label for="msgInput">new message:</label><br/>
+  <textarea id="msgInput" ref="msgInput" rows="4" cols="50"></textarea><br/>
+  <button @click="putMsg">submit</button>
 </div>
 <script>
   const vm = new Vue({
@@ -169,6 +183,42 @@
         this.uploadStatus.isUploading = true;
         this.uploadStatus.uploadProgress = progress;
       }
+    }
+  })
+
+  const msgBox = new Vue({
+    el: '#msgBox',  // css selector
+    data: {
+      messages: []
+    },
+    methods: {
+      getMsgs() {
+        axios.get('messages').then(
+          response => {
+            console.log('request successfully', response.data);
+            this.messages = response.data.messages;
+          },
+          error => {
+            console.log('err', error.message);
+          }
+        );
+      },
+      putMsg() {
+        let inputMsg = this.$refs.msgInput.value;
+        const data = {'msg': inputMsg};
+        axios.post('messages', data).then(
+          response => {
+            console.log('request successfully', response.data);
+            this.getMsgs();
+          },
+          error => {
+            console.log('err', error.message);
+          }
+        );
+      }
+    },
+    mounted() {
+      this.getMsgs();
     }
   })
 </script>
