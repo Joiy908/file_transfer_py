@@ -62,10 +62,12 @@ def upload_file():
 @app.route('/messages', methods=['GET', 'POST'])
 def getMsgs():
     if request.method == 'POST':
+        # add msg to Global
         msg = request.get_json().get('msg')
         messages.append(msg)
         return "upload msg successfully."
     else:
+        # if request type is GET, return messages
         return {'messages': messages}
 
 
