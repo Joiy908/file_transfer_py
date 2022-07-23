@@ -52,7 +52,7 @@
 <div id="upload">
   <!-- Prat II: upload file -->
   <h1>Upload File</h1>
-  <input id="file" type="file"/><br/>
+  <input ref="file" type="file"/><br/>
   <button type="button" @click="upload()">Upload</button>
   <br/>
   <div v-if="uploadStatus.isUploading">
@@ -140,7 +140,7 @@
     methods: {
       upload() {
         // 1. prepare data
-        let fileToUpload = document.getElementById('file').files[0];
+        let fileToUpload = this.$refs.file.files[0];
         if (fileToUpload === undefined) {
           alert('please select file to upload.')
           return;
