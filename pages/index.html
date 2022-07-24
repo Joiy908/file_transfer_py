@@ -19,68 +19,62 @@
 </head>
 <body>
 
-<div id="app">
-  <!-- Prat I: download file -->
-  <h1>File to download</h1>
-  Current dir: {{pathTreeObj.currentDirName}}
-  <button @click="backToParentDir()">back to parent dir</button>
-  <br>
-  <table>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Operation</th>
-    </tr>
-    <template v-show="pathTreeObj.subFolderList">
-      <tr v-for="(dirName,idx) in pathTreeObj.subFolderList" :key="dirName">
-        <td>Dir</td>
-        <td>{{ dirName }}</td>
-        <td @click="openDir(dirName)">
-          <button>open</button>
-        </td>
-      </tr>
-    </template>
-    <tr v-for="(fileName,idx) in pathTreeObj.subFileList" :key="fileName">
-      <td>File</td>
-      <td>{{ fileName }}</td>
-      <td><a :href="getDownloadUrl(fileName)">
-        <button>download</button>
-      </a></td>
-    </tr>
-  </table>
-</div>
-<div id="upload">
-  <!-- Prat II: upload file -->
-  <h1>Upload File</h1>
-  <input ref="file" type="file"/><br/>
-  <button type="button" @click="upload()">Upload</button>
-  <br/>
-  <div v-if="uploadStatus.isUploading">
-    Progress:{{ uploadStatus.uploadProgress }}%<br/>
-    Result: {{ uploadStatus.result }}
-  </div>
-</div>
+<div id="app"></div>
 
-<div id="msgBox">
-  <h1>Message Box</h1>
-  <span>message:</span><button @click="getMsgs()">refresh</button>
-  <ul>
-    <li v-for="msg in messages" :key="msg">{{msg}}</li>
-  </ul>
-  <label for="msgInput">new message:</label><br/>
-  <textarea id="msgInput" ref="msgInput" rows="4" cols="50"></textarea><br/>
-  <button @click="putMsg">submit</button>
-</div>
+
 <script>
-  const vm = new Vue({
-    el: '#app',  // css selector
-    data: {
-      pathTreeObj: {
-        currentDirName: '',
-        subFileList: [],
-        subFolderList: []
-      },
-      ROOT_PATH: './files',
+
+  // prepare component of
+  const DownloadTable = {
+    name: 'DownloadTable',
+    template: `
+      <div>
+      <h1>File to download</h1>
+      Current dir: {{ pathTreeObj.currentDirName }}
+      <button @click="backToParentDir()">back to parent dir</button>
+      <br>
+      <table>
+        <tr>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Operation</th>
+        </tr>
+        <template v-show="pathTreeObj.subFolderList">
+          <tr v-for="dirName in pathTreeObj.subFolderList" :key="dirName">
+            <td>Dir</td>
+            <td>{{ dirName }}</td>
+            <td @click="openDir(dirName)">
+              <button>open</button>
+            </td>
+          </tr>
+        </template>
+        <tr v-for="fileName in pathTreeObj.subFileList" :key="fileName">
+          <td>File</td>
+          <td>{{ fileName }}</td>
+          <td><a :href="getDownloadUrl(fileName)">
+            <button>download</button>
+          </a></td>
+        </tr>
+      </table>
+
+      </div>
+    `,
+    data() {
+      return {
+        pathTreeObj: {
+          currentDirName: '',
+          subFileList: [],
+          subFolderList: []
+        },
+        ROOT_PATH: './files',
+      }
+    },
+    watch: {
+      "pathTreeObj.currentDirName": {
+        handler(newValue, oldValue) {
+          this.$emit('changeDir', newValue);
+        }
+      }
     },
     methods: {
       getPathTreeObj(path) {
@@ -120,21 +114,36 @@
     mounted() {
       this.getPathTreeObj(this.ROOT_PATH);
     }
-  });
+  }
 
-  const uploadVm = new Vue({
-    el: '#upload',  // css selector
-    data: {
-      uploadStatus: {
-        isUploading: false,
-        uploadProgress: 0,
-        result: ''
+  const UploadFile = {
+    name: 'UploadFile',
+    template: `
+      <div>
+      <h1>Upload File</h1>
+      <input ref="file" type="file"/><br/>
+      <button type="button" @click="upload()">Upload</button>
+      <br/>
+      <div v-if="uploadStatus.isUploading">
+        Progress:{{ uploadStatus.uploadProgress }}%<br/>
+        Result: {{ uploadStatus.result }}
+      </div>
+      </div>
+    `,
+    props: ['uploadDir'],
+    data() {
+      return {
+        uploadStatus: {
+          isUploading: false,
+          uploadProgress: 0,
+          result: ''
+        }
       }
     },
     computed: {
       uploadUrl() {
         // pass path as url parameter
-        return 'upload?dirPath=' + vm.pathTreeObj.currentDirName;
+        return 'upload?dirPath=' + this.uploadDir;
       }
     },
     methods: {
@@ -147,36 +156,35 @@
         }
         const data = new FormData();
         data.append('file', fileToUpload);
-        // data.append('dirPath', vm.pathTreeObj.currentDirName);
 
         // 2. write onUploadProgress listener
         const config = {
-          onUploadProgress: function (progressEvent) {
+          onUploadProgress: (progressEvent) => {
+            // use arrowFuc to share the 'this' of Vue
             let totalLength = progressEvent.lengthComputable ? progressEvent.total :
               progressEvent.target.getResponseHeader('content-length') ||
               progressEvent.target.getResponseHeader('x-decompressed-content-length');
             // console.log("onUploadProgress", totalLength);
             if (totalLength !== null) {
-              uploadVm.updateProgress(Math.round((progressEvent.loaded * 100) / totalLength));
+              this.updateProgress(Math.round((progressEvent.loaded * 100) / totalLength));
             }
           }
         };
 
+
         // 3. make request
-        axios.post(this.uploadUrl, data, config)
-          .then(function (res) {
-            // alert(rst);
-            uploadVm.uploadStatus.isUploading = true;
-            uploadVm.uploadStatus.result = res.data;
+        this.uploadStatus.isUploading = true;
+
+        axios.post(this.uploadUrl, data, config).then(
+          res => { // use of arrow function
+            // will make arrowFun share the same this with parentFun
+            this.uploadStatus.result = res.data;
             console.log(res);
-            vm.getPathTreeObj(vm.pathTreeObj.currentDirName);
-            // vm.uploadStatus.isUploading = false;
-          })
-          .catch(function (err) {
-            // alert(err);
-            uploadVm.uploadStatus.result = err.data;
+            // todo: manually update table
+          },
+          err => {
+            this.uploadStatus.result = err.data;
             console.log(err);
-            // vm.uploadStatus.isUploading = false;
           });
       },
       updateProgress(progress) {
@@ -184,12 +192,27 @@
         this.uploadStatus.uploadProgress = progress;
       }
     }
-  })
+  }
 
-  const msgBox = new Vue({
-    el: '#msgBox',  // css selector
-    data: {
-      messages: []
+  const MsgBox = {
+    name: 'MsgBox',
+    template: `
+      <div>
+      <h1>Message Box</h1>
+      <span>message:</span>
+      <button @click="getMsgs()">refresh</button>
+      <ul>
+        <li v-for="msg in messages" :key="msg">{{ msg }}</li>
+      </ul>
+      <label for="msgInput">new message:</label><br/>
+      <textarea id="msgInput" ref="msgInput" rows="4" cols="50"></textarea><br/>
+      <button @click="putMsg">submit</button>
+      </div>
+    `,
+    data() {
+      return {
+        messages: []
+      }
     },
     methods: {
       getMsgs() {
@@ -197,6 +220,7 @@
           response => {
             console.log('request successfully', response.data);
             this.messages = response.data.messages;
+            console.log('@@@', this.messages);
           },
           error => {
             console.log('err', error.message);
@@ -220,7 +244,34 @@
     mounted() {
       this.getMsgs();
     }
-  })
+  }
+
+  new Vue({
+    el: '#app',  // css selector
+    components: {
+      DownloadTable, UploadFile, MsgBox
+    },
+    // template 外面要用单个div包裹
+    template: `
+      <div>
+      <!-- Part I: download file -->
+      <DownloadTable v-on:changeDir="onChangeDir"></DownloadTable>
+      <!-- Part II: upload file -->
+      <UploadFile :uploadDir="currDirPath"></UploadFile>
+      <!-- Part III: dynamic message box -->
+      <MsgBox></MsgBox>
+      </div>
+    `,
+    data: {
+      currDirPath: ''
+    },
+    methods: {
+      onChangeDir(val) {
+        this.currDirPath = val;
+      }
+    },
+  });
+
 </script>
 </body>
 </html>
