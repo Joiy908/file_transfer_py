@@ -56,7 +56,6 @@
           </a></td>
         </tr>
       </table>
-
       </div>
     `,
     data() {
@@ -69,10 +68,17 @@
         ROOT_PATH: './files',
       }
     },
+    props: ['pleaseRefresh'],
     watch: {
       "pathTreeObj.currentDirName": {
         handler(newValue, oldValue) {
           this.$emit('changeDir', newValue);
+        }
+      },
+      'pleaseRefresh': {
+        handler(newValue, oldValue) {
+          // if pleaseRefresh is updated, do refresh
+          this.refresh();
         }
       }
     },
@@ -106,9 +112,11 @@
       },
       getDownloadUrl(fileName) {
         let filePath = this.pathTreeObj.currentDirName + '/' + fileName;
-
         return 'download?filePath=' + filePath;
       },
+      refresh() {
+        this.getPathTreeObj(this.pathTreeObj.currentDirName);
+      }
 
     },
     mounted() {
@@ -171,7 +179,6 @@
           }
         };
 
-
         // 3. make request
         this.uploadStatus.isUploading = true;
 
@@ -180,7 +187,8 @@
             // will make arrowFun share the same this with parentFun
             this.uploadStatus.result = res.data;
             console.log(res);
-            // todo: manually update table
+            // tell DownloadTable to refresh by change the date of pleaseRefresh in vm
+            this.$emit('doRefresh');
           },
           err => {
             this.uploadStatus.result = err.data;
@@ -255,19 +263,24 @@
     template: `
       <div>
       <!-- Part I: download file -->
-      <DownloadTable v-on:changeDir="onChangeDir"></DownloadTable>
+      <DownloadTable v-on:changeDir="onChangeDir" :pleaseRefresh="pleaseRefresh"></DownloadTable>
       <!-- Part II: upload file -->
-      <UploadFile :uploadDir="currDirPath"></UploadFile>
+      <UploadFile :uploadDir="currDirPath" v-on:doRefresh="onDoRefresh"></UploadFile>
       <!-- Part III: dynamic message box -->
       <MsgBox></MsgBox>
       </div>
     `,
     data: {
-      currDirPath: ''
+      currDirPath: '',
+      // use new Date() as a refresh signal pass from UploadFile to DownLoadTable
+      pleaseRefresh: '',
     },
     methods: {
       onChangeDir(val) {
         this.currDirPath = val;
+      },
+      onDoRefresh() {
+        this.pleaseRefresh = new Date();
       }
     },
   });
