@@ -8,12 +8,12 @@ ROOT_PATH = './files'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'zip'}
 app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
-messages = ['demo message']
+messages = {'demo message'}
 
 
 @app.route('/')
 def index():
-    return read_file('pages/index.html')
+    return send_from_directory('static', 'index.html')
 
 
 @app.route('/path', methods=['POST'])
@@ -43,7 +43,7 @@ def download():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'GET':
-        return read_file('./pages/upload.html')
+        return send_from_directory('pages', 'upload.html')
     else:
         if 'file' not in request.files:
             # flash('No file part')
@@ -64,19 +64,11 @@ def getMsgs():
     if request.method == 'POST':
         # add msg to Global
         msg = request.get_json().get('msg')
-        messages.append(msg)
+        messages.add(msg)
         return "upload msg successfully."
     else:
         # if request type is GET, return messages
-        return {'messages': messages}
-
-
-def read_file(file_path):
-    if not os.path.exists(file_path):
-        raise Exception('File does not exit.')
-    with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read()
-    return content
+        return {'messages': list(messages)}
 
 
 def decode_path(file_path):
