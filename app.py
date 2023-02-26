@@ -8,6 +8,8 @@ ROOT_PATH = './files'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'zip'}
 app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
+FILE_TYPE_CHECK = False
+
 messages = {'demo message'}
 
 
@@ -77,6 +79,8 @@ def decode_path(file_path):
 
 
 def is_allowed_file(filename):
+    if not FILE_TYPE_CHECK:
+        return True
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -84,6 +88,6 @@ def is_allowed_file(filename):
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
-        port=80,
+        port=8080,
         debug=True
     )
