@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, send_from_directory, abort, Response, request
+from flask import Flask, send_from_directory, abort, Response, request, jsonify, escape
 from collections import OrderedDict
 
 app = Flask(__name__)
@@ -26,27 +26,37 @@ def index():
     return send_from_directory('static', 'index.html')
 
 
-@app.route('/path', methods=['POST'])
+@app.route('/path', methods=['GET'])
 def getPathTree():
-    path_name = request.get_json().get('dirPath')
+    path_name = request.args.get('dirPath')
     if path_name is None or not os.path.exists(path_name):
         return abort(400, "invalid dirPath")
     (currentDirName, subFolderList, subFileList) = list(os.walk(path_name))[0]
-    pathTree = {'currentDirName': currentDirName,
+    path_tree = {'currentDirName': currentDirName,
                 'subFolderList': subFolderList,
                 'subFileList': subFileList}
-    return pathTree
+    return path_tree
 
 
-@app.route('/download')
+@app.route('/download', methods=['GET'])
 def download():
     file_path = request.args.get('filePath')
-    if os.path.isfile(file_path):
+    if file_path is not None and os.path.isfile(file_path):
         # get file_path_without_root
         file_path_without_root = file_path.replace(ROOT_PATH + '/', '')
         return send_from_directory(ROOT_PATH, file_path_without_root, as_attachment=True)
     else:
-        abort(400, 'File does not exists, please check the file name.')
+        abort(400, 'invalid filePath.')
+
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    file_path = request.args.get('filePath')
+    if file_path is not None and os.path.isfile(file_path):
+        os.remove(file_path)
+        return f"delete {escape(file_path)} ok!"
+    else:
+        abort(400, 'invalid filePath.')
 
 
 # upload page
