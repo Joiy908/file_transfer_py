@@ -38,7 +38,7 @@ This project is a web-based file transfer application that allows users to uploa
    flask run --host=0.0.0.0 --port=8080
    ```
 
-4. Open the `your-local-ip:8080` (replace thiwith your own ip show in the terminal like`192.168.0.123:8080`) in your web browser and other brosers in the same WLAN.
+4. Open the `your-local-ip:8080` (replace this with your own ip show in the terminal like`192.168.0.123:8080`) in your web browser and other browsers in the same WLAN.
 
 ## Usage
 
