@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, send_from_directory, abort, Response, request, jsonify, escape
 from collections import OrderedDict
+import argparse
 
 app = Flask(__name__)
 
@@ -51,12 +52,15 @@ def download():
 
 @app.route('/delete', methods=['POST'])
 def delete():
-    file_path = request.args.get('filePath')
-    if file_path is not None and os.path.isfile(file_path):
-        os.remove(file_path)
-        return f"delete {escape(file_path)} ok!"
+    if args.enable_del:
+        file_path = request.args.get('filePath')
+        if file_path is not None and os.path.isfile(file_path):
+            os.remove(file_path)
+            return f"delete {escape(file_path)} ok!"
+        else:
+            abort(400, 'invalid filePath.')
     else:
-        abort(400, 'invalid filePath.')
+        return abort(400, 'The delete feature is disabled.')
 
 
 # upload page
@@ -103,8 +107,16 @@ def is_allowed_file(filename):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Flask Application')
+    parser.add_argument('-enable_del', action='store_true', help='Enable the /delete endpoint')
+    args = parser.parse_args()
+
+    RED = '\x1b[31m'
+    RESET = '\x1b[0m'
+    if args.enable_del:
+        print(RED + '### delete is enabled' + RESET)
     app.run(
         host='0.0.0.0',
         port=8080,
-        debug=True
+        debug=False
     )
