@@ -1,6 +1,5 @@
 import os
 
-import argparse
 from collections import OrderedDict
 from flask import Flask, send_from_directory, abort, request, jsonify
 from markupsafe import escape
@@ -120,6 +119,8 @@ def get_ipv4():
 
 
 if __name__ == '__main__':
+    import argparse
+    global args
     parser = argparse.ArgumentParser(description='Flask Application')
     parser.add_argument('-enable_del', action='store_true', help='Enable the /delete endpoint')
     args = parser.parse_args()
