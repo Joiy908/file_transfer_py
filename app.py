@@ -1,8 +1,9 @@
 import os
 
-from flask import Flask, send_from_directory, abort, Response, request, jsonify, escape
-from collections import OrderedDict
 import argparse
+from collections import OrderedDict
+from flask import Flask, send_from_directory, abort, request, jsonify
+from markupsafe import escape
 
 app = Flask(__name__)
 
@@ -105,18 +106,33 @@ def is_allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_ipv4():
+    import os, re
+    ip_info: str = os.popen('ipconfig').read()
+    wlan_ipv4_pattern = r'WLAN.*?IPv4.*?(\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})'
+
+    match = re.search(wlan_ipv4_pattern, ip_info, re.DOTALL)
+    if not match or match.lastindex != 1:
+        import sys
+        sys.exit(RED + "err: fail to get ip address" + RESET)
+    print('successfully get ip: %s' % match.group(1))
+    return match.group(1)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Flask Application')
     parser.add_argument('-enable_del', action='store_true', help='Enable the /delete endpoint')
     args = parser.parse_args()
 
+    global RED
     RED = '\x1b[31m'
+    global RESET
     RESET = '\x1b[0m'
     if args.enable_del:
         print(RED + '### delete is enabled' + RESET)
+
     app.run(
-        host='0.0.0.0',
+        host=get_ipv4(),
         port=8080,
         debug=False
     )

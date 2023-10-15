@@ -17,8 +17,6 @@ This project is a web-based file transfer application that allows users to uploa
 
 ## Installation
 
-
-
 1. Clone the repository:
 
    ```bash
@@ -35,10 +33,14 @@ This project is a web-based file transfer application that allows users to uploa
 3. Run the server:
 
    ```bash
-   flask run --host=0.0.0.0 --port=8080
+   python3 run [-enable_del]
    ```
 
+   - `-enable_del` give the user perssion to delete file. by default users are not allow to delete files.
+
 4. Open the `your-local-ip:8080` (replace this with your own ip show in the terminal like`192.168.0.123:8080`) in your web browser and other browsers in the same WLAN.
+
+PS: If the err `err: fail to get ip address` show, change the `get_ipv4()` function in app.py to fit your environment.
 
 ## Usage
 
@@ -57,6 +59,12 @@ To upload a file:
 To download a file:
 
 1. Click the "Download" button next to the file you want to download.
+
+### Delete a file
+
+By default, this feature is turned off.
+
+`python app.py -enable_del` to enable the feature.
 
 ### Sharing a Text Message
 
