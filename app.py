@@ -113,7 +113,7 @@ def get_ipv4():
     match = re.search(wlan_ipv4_pattern, ip_info, re.DOTALL)
     if not match or match.lastindex != 1:
         import sys
-        sys.exit(RED + "err: fail to get ip address" + RESET)
+        sys.exit(RED + 'err: fail to get ip address' + RESET)
     print('successfully get ip: %s' % match.group(1))
     return match.group(1)
 

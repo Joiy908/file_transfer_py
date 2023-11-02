@@ -73,6 +73,39 @@ To share a text message:
 1. Type your message in the text box.
 2. Click the "Share" button.
 
+## run.sh
+
+```bash
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        -del|--enable-delete)
+        ENABLE_DEL="-enable_del"
+        shift
+        ;;
+        *)
+        # Unknown option
+        echo "Unknown option: $key"
+        exit 1
+        ;;
+    esac
+done
+
+# Activate the virtual environment
+source /d/src/Py_projects/projects_2022/file_transfer/flaskVenv/Scripts/activate
+
+# Change to the project directory and run the Flask app with optional flag
+cd /d/src/Py_projects/projects_2022/file_transfer/
+python app.py $ENABLE_DEL
+
+#cd /d/src/etc/file_transfer_js
+#npm run serve
+```
+
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://chat.openai.com/c/LICENSE) file for details.
