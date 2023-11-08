@@ -12,7 +12,7 @@ app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
 FILE_TYPE_CHECK = False
 
-messages = {'demo message'}
+messages = ['demo message']
 
 @app.errorhandler(400)
 def bad_request(e):
@@ -22,6 +22,7 @@ def bad_request(e):
         "description": e.description,
     })), 400
 
+
 @app.route('/')
 def index():
     return send_from_directory('static', 'index.html')
@@ -29,10 +30,11 @@ def index():
 
 @app.route('/path', methods=['GET'])
 def getPathTree():
+    '''return path tree'''
     path_name = request.args.get('dirPath')
     if path_name is None or not os.path.exists(path_name):
         return abort(400, "invalid dirPath")
-    (currentDirName, subFolderList, subFileList) = list(os.walk(path_name))[0]
+    currentDirName, subFolderList, subFileList = list(os.walk(path_name))[0]
     path_tree = {'currentDirName': currentDirName,
                 'subFolderList': subFolderList,
                 'subFileList': subFileList}
@@ -63,7 +65,6 @@ def delete():
         return abort(400, 'The delete feature is disabled.')
 
 
-# upload page
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'GET':
@@ -92,7 +93,7 @@ def getMsgs():
         msg = request.get_json().get('msg')
         if msg is None:
             return abort(400, "msg need to be provided")
-        messages.add(msg)
+        messages.append(msg)
         return "upload msg successfully."
     else:
         # if request type is GET, return messages
@@ -105,6 +106,7 @@ def is_allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def get_ipv4():
     import os, re
     ip_info: str = os.popen('ipconfig').read()
@@ -113,9 +115,13 @@ def get_ipv4():
     match = re.search(wlan_ipv4_pattern, ip_info, re.DOTALL)
     if not match or match.lastindex != 1:
         import sys
-        sys.exit(RED + 'err: fail to get ip address' + RESET)
+        sys.exit(red('err: fail to get ip address'))
     print('successfully get ip: %s' % match.group(1))
     return match.group(1)
+
+
+def red(text: str):
+    return '\x1b[31m' + text + '\x1b[0m'
 
 
 if __name__ == '__main__':
@@ -125,12 +131,8 @@ if __name__ == '__main__':
     parser.add_argument('-enable_del', action='store_true', help='Enable the /delete endpoint')
     args = parser.parse_args()
 
-    global RED
-    RED = '\x1b[31m'
-    global RESET
-    RESET = '\x1b[0m'
     if args.enable_del:
-        print(RED + '### delete is enabled' + RESET)
+        print(red('### delete is enabled'))
 
     app.run(
         host=get_ipv4(),
