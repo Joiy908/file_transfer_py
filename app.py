@@ -4,8 +4,13 @@ from collections import OrderedDict
 from flask import Flask, send_from_directory, abort, request, jsonify
 from markupsafe import escape
 import re
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app, cors_allowed_origins='*')
+
 
 ROOT_PATH = './files'
 # not contain `..` and start with ROOT_PATH 
@@ -16,7 +21,21 @@ app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
 FILE_TYPE_CHECK = False
 
-messages = ['demo message']
+msg_list = ['first message']
+msg_set = set(msg_list)
+
+
+@socketio.on("connect")
+def handle_connect():
+    client_ip = request.remote_addr  # Get the client's IP address
+    print(red(f'Client with IP {client_ip} has connected'))
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    client_ip = request.remote_addr  # Get the client's IP address
+    print(red(f'{client_ip} disconnect. ==='))
+
 
 @app.errorhandler(400)
 def bad_request(e):
@@ -60,10 +79,13 @@ def download():
 
 @app.route('/delete', methods=['POST'])
 def delete():
+    '''if a valid request gotten, remove the file
+        and broadcast refresh to all client'''
     if args.enable_del:
         file_path = request.args.get('filePath')
         if is_valid_file_path(file_path):
             os.remove(file_path)
+            broadcast_refresh()
             return f"delete {escape(file_path)} ok!"
         else:
             abort(400, 'invalid filePath.')
@@ -72,7 +94,9 @@ def delete():
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
+def handle_upload():
+    '''if a valid post request gotten, save the file
+        and broadcast refresh to all client'''
     if request.method == 'GET':
         return send_from_directory('pages', 'upload.html')
     else:
@@ -89,6 +113,7 @@ def upload_file():
             return abort(400, \
                 "upload fails, {dir_path} is invalid.'")
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
+        broadcast_refresh()
         return 'upload successfully!'
 
 
@@ -99,12 +124,18 @@ def getMsgs():
         msg = request.get_json().get('msg')
         if msg is None:
             return abort(400, "msg need to be provided")
-        messages.append(msg)
+        if msg not in msg_set:
+            msg_list.append(msg)
+            msg_set.add(msg)
+            print(msg)
         return "upload msg successfully."
     else:
         # if request type is GET, return messages
-        return {'messages': list(messages)}
+        return {'messages': list(msg_list)}
 
+
+def broadcast_refresh():
+    emit('refresh', f"", broadcast=True, namespace='/')
 
 def is_valid_dir_path(path: str):
     return path is not None and path_pat.match(path) and os.path.isdir(path);
@@ -144,8 +175,4 @@ if __name__ == '__main__':
     if args.enable_del:
         print(red('### delete is enabled'))
 
-    app.run(
-        host=get_ipv4(),
-        port=8080,
-        debug=False
-    )
+    socketio.run(app, host=get_ipv4(), port=8080, debug=True)
