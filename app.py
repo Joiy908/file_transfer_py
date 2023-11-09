@@ -3,10 +3,14 @@ import os
 from collections import OrderedDict
 from flask import Flask, send_from_directory, abort, request, jsonify
 from markupsafe import escape
+import re
 
 app = Flask(__name__)
 
 ROOT_PATH = './files'
+# not contain `..` and start with ROOT_PATH 
+path_pat = re.compile(r'^(?!.*\.\.)^' + ROOT_PATH)
+
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'zip'}
 app.config['UPLOAD_FOLDER'] = ROOT_PATH
 
@@ -32,8 +36,10 @@ def index():
 def getPathTree():
     '''return path tree'''
     path_name = request.args.get('dirPath')
-    if path_name is None or not os.path.exists(path_name):
+
+    if not is_valid_dir_path(path_name):
         return abort(400, "invalid dirPath")
+
     currentDirName, subFolderList, subFileList = list(os.walk(path_name))[0]
     path_tree = {'currentDirName': currentDirName,
                 'subFolderList': subFolderList,
@@ -44,7 +50,7 @@ def getPathTree():
 @app.route('/download', methods=['GET'])
 def download():
     file_path = request.args.get('filePath')
-    if file_path is not None and os.path.isfile(file_path):
+    if is_valid_file_path(file_path):
         # get file_path_without_root
         file_path_without_root = file_path.replace(ROOT_PATH + '/', '')
         return send_from_directory(ROOT_PATH, file_path_without_root, as_attachment=True)
@@ -56,7 +62,7 @@ def download():
 def delete():
     if args.enable_del:
         file_path = request.args.get('filePath')
-        if file_path is not None and os.path.isfile(file_path):
+        if is_valid_file_path(file_path):
             os.remove(file_path)
             return f"delete {escape(file_path)} ok!"
         else:
@@ -79,9 +85,9 @@ def upload_file():
         if not is_allowed_file(f.filename):
             return abort(400, \
                 'upload fails, file type of {f.filename} is not permitted.')
-        if not os.path.exists(dir_path):
+        if not is_valid_dir_path(dir_path):
             return abort(400, \
-                "upload fails, {dir_path} don't exist.'")
+                "upload fails, {dir_path} is invalid.'")
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
         return 'upload successfully!'
 
@@ -100,12 +106,20 @@ def getMsgs():
         return {'messages': list(messages)}
 
 
-def is_allowed_file(filename):
+def is_valid_dir_path(path: str):
+    return path is not None and path_pat.match(path) and os.path.isdir(path);
+
+def is_valid_file_path(path: str):
+    return path is not None and path_pat.match(path) and os.path.isfile(path);
+
+def is_allowed_file(filename: str):
     if not FILE_TYPE_CHECK:
         return True
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def red(text: str):
+    return '\x1b[31m' + text + '\x1b[0m'
 
 def get_ipv4():
     import os, re
@@ -118,10 +132,6 @@ def get_ipv4():
         sys.exit(red('err: fail to get ip address'))
     print('successfully get ip: %s' % match.group(1))
     return match.group(1)
-
-
-def red(text: str):
-    return '\x1b[31m' + text + '\x1b[0m'
 
 
 if __name__ == '__main__':
