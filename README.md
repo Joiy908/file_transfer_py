@@ -1,79 +1,55 @@
-# File Transfer
+# File Transfer Application
 
-This project is a web-based file transfer application that allows users to upload and download files as well as share text messages with others. It is built using Flask as the server and Vue as the frontend framework. The AJAX requests are made using Axios.
+This is a simple file transfer application built using Flask and Socket.IO. It allows users to manage and transfer files within a local network.
 
 ## Features
 
-- Upload and download files
-- Share text messages
-- Simple and intuitive user interface
-- Fast and responsive
+- **Directory Navigation:** Browse through directories and view files in the served directory.
+- **Download, Upload, Delete Files**
+- **Real-Time Data Refresh:** Utilizes Socket.IO for automatic data refresh, ensuring that changes made by one user are instantly reflected for all connected users.
+- **Message Box:** Communicate with other users through a message box that supports multiple lines of text.
 
-## Technologies Used
+<img src=".images/shot.png" alt="shot" style="zoom: 50%;" />
 
-- Flask/Express: server-side framework
-- Vue: frontend framework
-- Axios: AJAX requests
+## Getting Started
 
-## Installation
+### Prerequisites
+
+- Python 3.x
+- Flask
+- Flask-SocketIO
+
+### Installation
 
 1. Clone the repository:
 
    ```bash
    git clone git@github.com:Joiy908/file_transfer_py.git
+   cd file_transfer_py
    ```
 
 2. Install dependencies:
 
-   ```bash
-   # create and activate vritural env here if you like to
-   pip install flask
-   ```
+    ```bash
+    mkdir files
+    pip install -r requirements.txt
+    ```
 
-3. Run the server:
+3. Run the application:
 
-   ```bash
-   python3 run [-enable_del]
-   ```
+    ```bash
+    python app.py [-enable_del]
+    ```
 
-   - `-enable_del` give the user perssion to delete file. by default users are not allow to delete files.
+- By default, the delete feature is disabled. To enable it, run the application with the `-enable_del`.
 
-4. Open the `your-local-ip:8080` (replace this with your own ip show in the terminal like`192.168.0.123:8080`) in your web browser and other browsers in the same WLAN.
+The app will be available at `http://your_ipv4:8080`.
 
 PS: If the err `err: fail to get ip address` show, change the `get_ipv4()` function in app.py to fit your environment.
 
-## Usage
+## Quick Shell Script
 
-Firstly run the server.
-
-### Uploading a File
-
-To upload a file:
-
-1. Click the "Upload" button.
-2. Select the file you want to upload.
-3. Click "Upload".
-
-### Downloading a File
-
-To download a file:
-
-1. Click the "Download" button next to the file you want to download.
-
-### Delete a file
-
-By default, this feature is turned off.
-
-`python app.py -enable_del` to enable the feature.
-
-### Sharing a Text Message
-
-To share a text message:
-
-1. Type your message in the text box.
-2. Click the "Share" button.
-
-## run.sh
+Here is a quick shell script to parse command-line arguments, activate the virtual environment, change to the project directory, and run the Flask app with an optional flag:
 
 ```bash
 # Parse command-line arguments
@@ -99,12 +75,7 @@ source /d/src/Py_projects/projects_2022/file_transfer/flaskVenv/Scripts/activate
 # Change to the project directory and run the Flask app with optional flag
 cd /d/src/Py_projects/projects_2022/file_transfer/
 python app.py $ENABLE_DEL
-
-#cd /d/src/etc/file_transfer_js
-#npm run serve
 ```
-
-
 
 ## License
 

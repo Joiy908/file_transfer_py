@@ -85,18 +85,18 @@ def delete():
         file_path = request.args.get('filePath')
         if is_valid_file_path(file_path):
             os.remove(file_path)
-            broadcast_refresh()
+            broadcast_refresh('path')
             return f"delete {escape(file_path)} ok!"
         else:
             abort(400, 'invalid filePath.')
     else:
-        return abort(400, 'The delete feature is disabled.')
+        return abort(403, 'The delete feature is disabled.')
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def handle_upload():
     '''if a valid post request gotten, save the file
-        and broadcast refresh to all client'''
+        and broadcast refresh_path to all client'''
     if request.method == 'GET':
         return send_from_directory('pages', 'upload.html')
     else:
@@ -113,12 +113,17 @@ def handle_upload():
             return abort(400, \
                 "upload fails, {dir_path} is invalid.'")
         f.save(os.path.join(dir_path, f.filename))  # 保存文件
-        broadcast_refresh()
+        broadcast_refresh('path')
         return 'upload successfully!'
 
 
 @app.route('/messages', methods=['GET', 'POST'])
 def getMsgs():
+    '''
+    POST request: get msg put it to msg_list and msg_set,
+    then broadcast refresh_msgs to all connected clients
+    GET request: return msg_list
+    '''
     if request.method == 'POST':
         # add msg to Global
         msg = request.get_json().get('msg')
@@ -127,15 +132,16 @@ def getMsgs():
         if msg not in msg_set:
             msg_list.append(msg)
             msg_set.add(msg)
-            print(msg)
+            broadcast_refresh('msgs')
         return "upload msg successfully."
     else:
         # if request type is GET, return messages
         return {'messages': list(msg_list)}
 
 
-def broadcast_refresh():
-    emit('refresh', f"", broadcast=True, namespace='/')
+def broadcast_refresh(target: str):
+    assert target == 'path' or target == 'msgs'
+    emit('refresh_' + target, "", broadcast=True, namespace='/')
 
 def is_valid_dir_path(path: str):
     return path is not None and path_pat.match(path) and os.path.isdir(path);
